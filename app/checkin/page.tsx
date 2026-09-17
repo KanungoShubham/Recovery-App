@@ -81,7 +81,13 @@ export default function CheckInPage() {
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center px-6 pb-6 pt-2 text-center">
-        <span className="text-[56px] leading-none">{mood ? MOODS.find((m) => m.id === mood)!.emoji : "🤖"}</span>
+        {mood ? (
+          <span className="text-[56px] leading-none">{MOODS.find((m) => m.id === mood)!.emoji}</span>
+        ) : (
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/15 text-white">
+            <Icon path={paths.bot} className="h-8 w-8" />
+          </div>
+        )}
         <h1 className="mt-4 text-[22px] font-bold text-white">
           {mood ? MOODS.find((m) => m.id === mood)!.label : "How are you feeling right now?"}
         </h1>

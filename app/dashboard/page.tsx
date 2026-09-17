@@ -60,7 +60,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="overflow-y-auto pb-4">
+      <div className="flex-1 overflow-y-auto pb-4">
         <PatientTopBar name={state.name} />
 
         <div className="px-5">
