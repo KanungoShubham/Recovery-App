@@ -71,10 +71,15 @@ function RolePageInner() {
         {ROLES.map((r) => {
           const active = selected === r.id;
           return (
-            <button
+            <div
               key={r.id}
+              role="button"
+              tabIndex={0}
               onClick={() => choose(r.id)}
-              className={`w-full rounded-2xl border-2 bg-white p-4 text-left shadow-card transition-colors ${
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") choose(r.id);
+              }}
+              className={`w-full cursor-pointer rounded-2xl border-2 bg-white p-4 text-left shadow-card transition-colors ${
                 active ? "border-primary" : "border-transparent"
               }`}
             >
@@ -109,7 +114,7 @@ function RolePageInner() {
                   </button>
                 </div>
               )}
-            </button>
+            </div>
           );
         })}
         {isLogin && (
