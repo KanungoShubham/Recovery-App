@@ -12,17 +12,30 @@ export default function CareTeamPage() {
   const [showInvite, setShowInvite] = useState(false);
   const [name, setName] = useState("");
   const [relation, setRelation] = useState("");
+  const [contactMode, setContactMode] = useState<"mobile" | "email">("mobile");
+  const [contact, setContact] = useState("");
 
   function callDoctor() {
     push({ kind: "info", title: "Calling...", message: `${state.doctor.name} · ${state.doctor.phone}` });
   }
 
+  const contactValid =
+    contactMode === "mobile"
+      ? contact.replace(/\D/g, "").length >= 10
+      : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
+
   function sendInvite() {
-    if (!name.trim()) return;
-    inviteCaregiver(name.trim(), relation.trim() || "Caregiver");
-    push({ kind: "success", title: "Invite sent", message: `${name} will receive an email invite.` });
+    if (!name.trim() || !contactValid) return;
+    const fullContact = contactMode === "mobile" ? `+91 ${contact.trim()}` : contact.trim();
+    inviteCaregiver(name.trim(), relation.trim() || "Caregiver", fullContact);
+    push({
+      kind: "success",
+      title: "Invite sent",
+      message: `${name} will receive an invite via ${contactMode === "mobile" ? "SMS/WhatsApp" : "email"} at ${fullContact}.`,
+    });
     setName("");
     setRelation("");
+    setContact("");
     setShowInvite(false);
   }
 
@@ -92,9 +105,58 @@ export default function CareTeamPage() {
               placeholder="Relationship (e.g. Son, Spouse)"
               className="mb-3 h-11 w-full rounded-xl border border-gray-medium bg-white px-3 text-[14px] outline-none focus:border-primary"
             />
+
+            <div className="mb-2 flex gap-2 rounded-xl bg-white p-1">
+              <button
+                onClick={() => {
+                  setContactMode("mobile");
+                  setContact("");
+                }}
+                className={`h-9 flex-1 rounded-lg text-[12px] font-semibold transition-colors ${
+                  contactMode === "mobile" ? "bg-primary text-white" : "text-gray-helper"
+                }`}
+              >
+                Mobile number
+              </button>
+              <button
+                onClick={() => {
+                  setContactMode("email");
+                  setContact("");
+                }}
+                className={`h-9 flex-1 rounded-lg text-[12px] font-semibold transition-colors ${
+                  contactMode === "email" ? "bg-primary text-white" : "text-gray-helper"
+                }`}
+              >
+                Email
+              </button>
+            </div>
+
+            {contactMode === "mobile" ? (
+              <div className="mb-3 flex items-center gap-2 rounded-xl border border-gray-medium bg-white px-3 focus-within:border-primary">
+                <span className="text-[14px] font-medium text-gray-helper">+91</span>
+                <input
+                  value={contact}
+                  onChange={(e) => setContact(e.target.value)}
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="98765 43210"
+                  className="h-11 w-full bg-transparent text-[14px] text-ink outline-none placeholder:text-gray-helper"
+                />
+              </div>
+            ) : (
+              <input
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                type="email"
+                placeholder="caregiver@example.com"
+                className="mb-3 h-11 w-full rounded-xl border border-gray-medium bg-white px-3 text-[14px] outline-none focus:border-primary"
+              />
+            )}
+
             <button
               onClick={sendInvite}
-              className="flex h-11 w-full items-center justify-center rounded-xl bg-primary text-[13px] font-semibold text-white active:opacity-90"
+              disabled={!name.trim() || !contactValid}
+              className="flex h-11 w-full items-center justify-center rounded-xl bg-primary text-[13px] font-semibold text-white active:opacity-90 disabled:opacity-40"
             >
               Send invite
             </button>
@@ -112,7 +174,10 @@ export default function CareTeamPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[14px] font-semibold text-ink">{c.name}</p>
-                <p className="text-[12px] text-gray-helper">{c.relation}</p>
+                <p className="truncate text-[12px] text-gray-helper">
+                  {c.relation}
+                  {c.contact ? ` · ${c.contact}` : ""}
+                </p>
               </div>
               <span className="rounded-full bg-success-light px-2 py-1 text-[10px] font-bold uppercase text-success">
                 Active

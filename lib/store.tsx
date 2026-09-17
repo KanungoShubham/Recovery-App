@@ -35,7 +35,7 @@ export type ReminderItem = {
   kind: "success" | "info" | "warning" | "reminder";
 };
 
-export type Caregiver = { id: string; name: string; relation: string };
+export type Caregiver = { id: string; name: string; relation: string; contact: string };
 
 export type Mood = "great" | "okay" | "worried" | "uncomfortable" | "low" | "overwhelmed";
 
@@ -219,7 +219,7 @@ const DEFAULT_STATE: AppState = {
       kind: "warning",
     },
   ],
-  caregivers: [{ id: "c1", name: "Priya Sharma", relation: "Daughter" }],
+  caregivers: [{ id: "c1", name: "Priya Sharma", relation: "Daughter", contact: "+91 98765 11111" }],
   doctor: {
     name: "Dr. Aditi Mehta",
     specialty: "Orthopedic Surgeon",
@@ -326,7 +326,7 @@ type StoreValue = {
   markMissed: (id: string) => string | null;
   markAllRead: () => void;
   addReminder: (r: Omit<ReminderItem, "id" | "read" | "time">) => void;
-  inviteCaregiver: (name: string, relation: string) => void;
+  inviteCaregiver: (name: string, relation: string, contact: string) => void;
   completeDoctorOnboarding: (profile: Omit<DoctorProfile, "verified">, verified?: DoctorProfile["verified"]) => void;
   setPlanStatus: (id: string, status: ApprovalStatus) => string | null;
   replyQuery: (id: string) => string | null;
@@ -419,10 +419,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             ...s.reminders,
           ],
         })),
-      inviteCaregiver: (name, relation) =>
+      inviteCaregiver: (name, relation, contact) =>
         setState((s) => ({
           ...s,
-          caregivers: [...s.caregivers, { id: `c${Date.now()}`, name, relation }],
+          caregivers: [...s.caregivers, { id: `c${Date.now()}`, name, relation, contact }],
         })),
       completeDoctorOnboarding: (profile, verified = "pending") =>
         setState((s) => ({
