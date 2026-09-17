@@ -1,10 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { BottomNav } from "@/components/BottomNav";
 import { Icon, paths } from "@/components/icons";
 import { useStore } from "@/lib/store";
 import { useToast } from "@/lib/toast";
+import { plantEmoji } from "@/lib/plant";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -128,6 +130,22 @@ export default function ProfilePage() {
               {state.day - 1 <= 0 ? "Today" : `${state.day - 1} days ago`}
             </span>
           </div>
+
+          <Link
+            href="/streak/choose"
+            className="mt-3 flex items-center gap-3 rounded-2xl border border-gray-medium bg-white p-4 shadow-card active:opacity-80"
+          >
+            <span className="text-[32px] leading-none">{plantEmoji(state.streak.plant, state.streak.days)}</span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[14px] font-bold text-ink">
+                {state.streak.plant ? state.streak.plantName : "Choose your recovery plant"}
+              </p>
+              <p className="text-[12px] text-gray-helper">
+                {state.streak.days} day streak · grows as you complete your plan
+              </p>
+            </div>
+            <Icon path={paths.chevronRight} className="h-4 w-4 shrink-0 text-gray-helper" />
+          </Link>
 
           {sections.map((section) => (
             <div key={section.heading} className="mt-6">

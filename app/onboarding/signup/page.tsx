@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/Header";
 import { useToast } from "@/lib/toast";
 
 export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupPageInner />
+    </Suspense>
+  );
+}
+
+function SignupPageInner() {
   const router = useRouter();
   const params = useSearchParams();
   const role = params.get("role") ?? "patient";
@@ -41,6 +49,8 @@ export default function SignupPage() {
         router.push(`/onboarding/setup?name=${encodeURIComponent(name)}`);
       } else if (role === "doctor") {
         router.push("/doctor/onboarding");
+      } else if (role === "caregiver") {
+        router.push(`/onboarding/caregiver-setup?name=${encodeURIComponent(name)}`);
       } else {
         router.push("/dashboard");
       }

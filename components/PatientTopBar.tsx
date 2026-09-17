@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Icon, paths } from "./icons";
 import { useToast } from "@/lib/toast";
+import { useStore } from "@/lib/store";
 
 function greetingWord() {
   const h = new Date().getHours();
@@ -13,8 +14,10 @@ function greetingWord() {
 
 export function PatientTopBar({ name }: { name: string }) {
   const { push } = useToast();
+  const { state } = useStore();
   const firstName = name.split(" ")[0] || "there";
   const initial = firstName.charAt(0).toUpperCase() || "P";
+  const roleLabel = state.role === "caregiver" ? "Caregiver" : "Patient";
 
   return (
     <div className="flex items-center justify-between px-5 pb-4 pt-[max(16px,env(safe-area-inset-top))]">
@@ -28,7 +31,7 @@ export function PatientTopBar({ name }: { name: string }) {
           </p>
           <p className="mt-0.5 flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide text-gray-helper">
             <Icon path={paths.user} className="h-3 w-3" />
-            Patient
+            {roleLabel}
           </p>
         </div>
       </Link>

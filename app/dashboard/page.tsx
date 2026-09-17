@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
 import { PatientTopBar } from "@/components/PatientTopBar";
 import { ActionCard } from "@/components/ActionCard";
+import { CompanionButton } from "@/components/CompanionButton";
 import { Icon, paths } from "@/components/icons";
 import { useStore, type ActionItem } from "@/lib/store";
 import { useToast } from "@/lib/toast";
+import { plantEmoji } from "@/lib/plant";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -68,6 +70,28 @@ export default function DashboardPage() {
       <div className="overflow-y-auto pb-4">
         <PatientTopBar name={state.name} />
 
+        <div className="flex items-center gap-2.5 px-5 pb-4">
+          <Link
+            href="/streak/choose"
+            className="flex flex-1 items-center gap-2.5 rounded-2xl border border-gray-medium bg-white px-3.5 py-2.5 shadow-card active:opacity-80"
+          >
+            <span className="text-[22px] leading-none">{plantEmoji(state.streak.plant, state.streak.days)}</span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[13px] font-bold text-ink">
+                {state.streak.plant ? state.streak.plantName : "Choose your plant"}
+              </p>
+              <p className="text-[11px] text-gray-helper">{state.streak.days} day streak</p>
+            </div>
+          </Link>
+          <Link
+            href="/ask-doctor"
+            className="flex h-[52px] items-center gap-1.5 rounded-2xl bg-primary/10 px-3.5 text-primary active:opacity-80"
+          >
+            <Icon path={paths.chatBubble} className="h-4 w-4" />
+            <span className="text-[12px] font-bold">Ask Doctor</span>
+          </Link>
+        </div>
+
         <div className="px-5">
           {focus ? (
             <FocusCard
@@ -126,6 +150,7 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+      <CompanionButton />
       <BottomNav />
     </div>
   );

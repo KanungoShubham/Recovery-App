@@ -37,6 +37,22 @@ export type ReminderItem = {
 
 export type Caregiver = { id: string; name: string; relation: string };
 
+export type Mood = "great" | "okay" | "worried" | "uncomfortable" | "low" | "overwhelmed";
+
+export type Streak = {
+  days: number;
+  plant: "monstera" | "succulent" | "bonsai" | null;
+  plantName: string;
+};
+
+export type AskQuery = {
+  id: string;
+  type: string;
+  message: string;
+  time: string;
+  status: "sent" | "delivered";
+};
+
 export type ApprovalStatus = "pending" | "approved" | "info_needed" | "rejected";
 
 export type PlanApproval = {
@@ -94,6 +110,11 @@ export type AppState = {
   planApprovals: PlanApproval[];
   patientQueries: PatientQuery[];
   appointments: DoctorAppointment[];
+  streak: Streak;
+  lastCheckIn: { mood: Mood; time: string } | null;
+  askQueries: AskQuery[];
+  preferences: { largeText: boolean; voiceMode: boolean; screenReader: boolean; strongVibration: boolean };
+  caregiverLinkedPatient: { name: string; status: "pending" | "synced" } | null;
 };
 
 const DEFAULT_STATE: AppState = {
@@ -284,6 +305,11 @@ const DEFAULT_STATE: AppState = {
       status: "pending",
     },
   ],
+  streak: { days: 3, plant: null, plantName: "" },
+  lastCheckIn: null,
+  askQueries: [],
+  preferences: { largeText: false, voiceMode: false, screenReader: false, strongVibration: true },
+  caregiverLinkedPatient: null,
 };
 
 type StoreValue = {
@@ -299,6 +325,12 @@ type StoreValue = {
   setPlanStatus: (id: string, status: ApprovalStatus) => string | null;
   replyQuery: (id: string) => string | null;
   setAppointmentStatus: (id: string, status: "approved" | "rejected") => string | null;
+  choosePlant: (plant: NonNullable<Streak["plant"]>, plantName: string) => void;
+  recordCheckIn: (mood: Mood) => void;
+  submitQuery: (type: string, message: string) => void;
+  setPreferences: (p: Partial<AppState["preferences"]>) => void;
+  linkPatient: (name: string) => void;
+  confirmPatientSync: () => void;
   reset: () => void;
 };
 
@@ -425,6 +457,43 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }));
         return name;
       },
+      choosePlant: (plant, plantName) =>
+        setState((s) => ({ ...s, streak: { ...s.streak, plant, plantName } })),
+      recordCheckIn: (mood) =>
+        setState((s) => ({
+          ...s,
+          lastCheckIn: { mood, time: "Just now" },
+          streak: { ...s.streak, days: s.streak.days + 1 },
+        })),
+      submitQuery: (type, message) =>
+        setState((s) => ({
+          ...s,
+          askQueries: [
+            { id: `aq${Date.now()}`, type, message, time: "Just now", status: "sent" },
+            ...s.askQueries,
+          ],
+          patientQueries: [
+            {
+              id: `q${Date.now()}`,
+              patientName: s.name || "Patient",
+              message,
+              urgency: "P1",
+              time: "Just now",
+              replied: false,
+            },
+            ...s.patientQueries,
+          ],
+        })),
+      setPreferences: (p) =>
+        setState((s) => ({ ...s, preferences: { ...s.preferences, ...p } })),
+      linkPatient: (name) =>
+        setState((s) => ({ ...s, caregiverLinkedPatient: { name, status: "pending" } })),
+      confirmPatientSync: () =>
+        setState((s) =>
+          s.caregiverLinkedPatient
+            ? { ...s, caregiverLinkedPatient: { ...s.caregiverLinkedPatient, status: "synced" } }
+            : s
+        ),
       reset: () => {
         setState(DEFAULT_STATE);
         try {

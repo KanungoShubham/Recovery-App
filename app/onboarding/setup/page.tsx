@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PatientTopBar } from "@/components/PatientTopBar";
 import { BottomNav } from "@/components/BottomNav";
+import { PreferencesStep } from "@/components/PreferencesStep";
 import { Icon, paths } from "@/components/icons";
 import { useStore } from "@/lib/store";
 import { useToast } from "@/lib/toast";
@@ -11,12 +12,21 @@ import { useToast } from "@/lib/toast";
 type Stage = "idle" | "uploading" | "review" | "details" | "ready";
 
 export default function SetupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SetupPageInner />
+    </Suspense>
+  );
+}
+
+function SetupPageInner() {
   const router = useRouter();
   const params = useSearchParams();
   const name = params.get("name") ?? "";
-  const { completeOnboarding } = useStore();
+  const { completeOnboarding, setPreferences } = useStore();
   const { push } = useToast();
 
+  const [showPrefs, setShowPrefs] = useState(true);
   const [stage, setStage] = useState<Stage>("idle");
   const [fileName, setFileName] = useState("");
   const [procedure, setProcedure] = useState("");
@@ -60,6 +70,18 @@ export default function SetupPage() {
       message: "Your recovery plan for today is ready.",
     });
     router.push("/dashboard");
+  }
+
+  if (showPrefs) {
+    return (
+      <PreferencesStep
+        name={name}
+        onDone={(prefs) => {
+          setPreferences(prefs);
+          setShowPrefs(false);
+        }}
+      />
+    );
   }
 
   return (

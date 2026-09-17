@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Icon, paths } from "@/components/icons";
@@ -14,6 +14,14 @@ const ROLES: { id: Exclude<Role, null>; title: string; desc: string; icon: strin
 ];
 
 export default function RolePage() {
+  return (
+    <Suspense fallback={null}>
+      <RolePageInner />
+    </Suspense>
+  );
+}
+
+function RolePageInner() {
   const router = useRouter();
   const params = useSearchParams();
   const isLogin = params.get("mode") === "login";
