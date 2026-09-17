@@ -44,7 +44,7 @@ export default function WelcomePage() {
             href="/doctor/entry"
             className="mt-2 flex h-8 w-full items-center justify-center text-[12px] font-medium text-gray-helper active:opacity-70"
           >
-            Are you a doctor or clinician? Sign in here
+            Are you a doctor or clinician?&nbsp;<span className="font-bold text-primary">Sign in here</span>
           </Link>
         </div>
       </div>
