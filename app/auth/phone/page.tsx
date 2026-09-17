@@ -22,13 +22,13 @@ export default function PhoneEntryPage() {
       <div className="flex-1 overflow-y-auto px-5 pb-6 pt-2">
         <label className="mb-1.5 block text-[13px] font-semibold text-ink">Phone number</label>
         <div className="flex items-center gap-2 rounded-xl border border-gray-medium bg-white px-4 focus-within:border-primary">
-          <span className="text-[15px] font-medium text-gray-helper">+1</span>
+          <span className="text-[15px] font-medium text-gray-helper">+91</span>
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             type="tel"
             inputMode="numeric"
-            placeholder="(555) 019-2231"
+            placeholder="98765 43210"
             className="h-12 w-full bg-transparent text-[15px] text-ink outline-none placeholder:text-gray-helper"
           />
         </div>

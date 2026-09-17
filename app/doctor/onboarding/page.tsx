@@ -6,16 +6,19 @@ import { Icon, paths } from "@/components/icons";
 import { useStore } from "@/lib/store";
 import { useToast } from "@/lib/toast";
 
-type Stage = "form" | "credentials" | "verifying" | "approved";
+type Stage = "phone" | "otp" | "form" | "credentials" | "verifying" | "approved";
 
 const LANGUAGES = ["English", "Hindi", "Spanish", "French"];
 
 export default function DoctorOnboardingPage() {
   const router = useRouter();
-  const { completeDoctorOnboarding } = useStore();
+  const { completeDoctorOnboarding, verifyAccount } = useStore();
   const { push } = useToast();
 
-  const [stage, setStage] = useState<Stage>("form");
+  const [stage, setStage] = useState<Stage>("phone");
+  const [phone, setPhone] = useState("");
+  const [code, setCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
   const [fullName, setFullName] = useState("");
   const [regNumber, setRegNumber] = useState("");
   const [specialty, setSpecialty] = useState("");
@@ -23,7 +26,26 @@ export default function DoctorOnboardingPage() {
   const [language, setLanguage] = useState("English");
   const [uploaded, setUploaded] = useState(false);
 
+  const phoneValid = phone.replace(/\D/g, "").length >= 10;
+  const codeValid = code.trim().length === 6;
   const formValid = fullName.trim() && regNumber.trim() && specialty.trim() && hospital.trim();
+
+  function sendOtp() {
+    if (!phoneValid) return;
+    setStage("otp");
+    push({ kind: "info", title: "Code sent", message: `We sent a 6-digit code to +91 ${phone}.` });
+  }
+
+  function verifyOtp() {
+    if (!codeValid) return;
+    setVerifying(true);
+    window.setTimeout(() => {
+      verifyAccount(phone);
+      setVerifying(false);
+      push({ kind: "success", title: "Number verified", message: "Let's set up your clinician profile." });
+      setStage("form");
+    }, 800);
+  }
 
   function submitForm() {
     if (!formValid) return;
@@ -61,6 +83,62 @@ export default function DoctorOnboardingPage() {
             <p className="text-[13px] text-gray-helper">Join CareBridge as a verified clinician.</p>
           </div>
         </div>
+
+        {stage === "phone" && (
+          <div className="rounded-2xl border border-gray-medium bg-white p-4 shadow-card">
+            <label className="mb-1.5 block text-[13px] font-semibold text-ink">Mobile number</label>
+            <div className="flex items-center gap-2 rounded-xl border border-gray-medium bg-white px-4 focus-within:border-primary">
+              <span className="text-[15px] font-medium text-gray-helper">+91</span>
+              <input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                type="tel"
+                inputMode="numeric"
+                placeholder="98765 43210"
+                className="h-12 w-full bg-transparent text-[15px] text-ink outline-none placeholder:text-gray-helper"
+              />
+            </div>
+            <p className="mt-2 text-[12px] leading-5 text-gray-helper">
+              We'll text you a one-time code to verify it's you.
+            </p>
+            <button
+              onClick={sendOtp}
+              disabled={!phoneValid}
+              className="mt-5 flex h-12 w-full items-center justify-center rounded-xl bg-primary text-[14px] font-bold text-white active:opacity-90 disabled:opacity-40"
+            >
+              Send code
+            </button>
+          </div>
+        )}
+
+        {stage === "otp" && (
+          <div className="rounded-2xl border border-gray-medium bg-white p-4 shadow-card">
+            <label className="mb-1.5 block text-[13px] font-semibold text-ink">
+              Enter the 6-digit code sent to +91 {phone}
+            </label>
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              type="tel"
+              inputMode="numeric"
+              placeholder="000000"
+              className="h-14 w-full rounded-xl border border-gray-medium bg-white px-4 text-center text-[22px] font-bold tracking-[0.5em] text-ink outline-none focus:border-primary"
+            />
+            <button
+              onClick={() => push({ kind: "info", title: "Code resent", message: `A new code was sent to +91 ${phone}.` })}
+              className="mt-3 w-full text-center text-[13px] font-semibold text-primary active:opacity-70"
+            >
+              Resend code
+            </button>
+            <button
+              onClick={verifyOtp}
+              disabled={!codeValid || verifying}
+              className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-primary text-[14px] font-bold text-white active:opacity-90 disabled:opacity-40"
+            >
+              {verifying ? "Verifying..." : "Verify"}
+            </button>
+          </div>
+        )}
 
         {stage === "form" && (
           <div className="rounded-2xl border border-gray-medium bg-white p-4 shadow-card">
