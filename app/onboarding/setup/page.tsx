@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { PatientTopBar } from "@/components/PatientTopBar";
 import { BottomNav } from "@/components/BottomNav";
 import { PreferencesStep } from "@/components/PreferencesStep";
@@ -12,21 +12,12 @@ import { useToast } from "@/lib/toast";
 type Stage = "idle" | "uploading" | "review" | "details" | "ready";
 
 export default function SetupPage() {
-  return (
-    <Suspense fallback={null}>
-      <SetupPageInner />
-    </Suspense>
-  );
-}
-
-function SetupPageInner() {
   const router = useRouter();
-  const params = useSearchParams();
-  const name = params.get("name") ?? "";
   const { completeOnboarding, setPreferences } = useStore();
   const { push } = useToast();
 
   const [showPrefs, setShowPrefs] = useState(true);
+  const [name, setName] = useState("");
   const [stage, setStage] = useState<Stage>("idle");
   const [fileName, setFileName] = useState("");
   const [procedure, setProcedure] = useState("");
@@ -75,9 +66,9 @@ function SetupPageInner() {
   if (showPrefs) {
     return (
       <PreferencesStep
-        name={name}
-        onDone={(prefs) => {
-          setPreferences(prefs);
+        onDone={({ name: n, language, prefs }) => {
+          setName(n);
+          setPreferences({ language, ...prefs });
           setShowPrefs(false);
         }}
       />

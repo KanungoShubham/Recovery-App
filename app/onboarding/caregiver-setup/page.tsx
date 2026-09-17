@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { PatientTopBar } from "@/components/PatientTopBar";
 import { PreferencesStep } from "@/components/PreferencesStep";
 import { Icon, paths } from "@/components/icons";
@@ -11,21 +11,12 @@ import { useToast } from "@/lib/toast";
 type Stage = "add" | "confirm" | "waiting" | "synced";
 
 export default function CaregiverSetupPage() {
-  return (
-    <Suspense fallback={null}>
-      <CaregiverSetupPageInner />
-    </Suspense>
-  );
-}
-
-function CaregiverSetupPageInner() {
   const router = useRouter();
-  const params = useSearchParams();
-  const name = params.get("name") ?? "";
   const { completeOnboarding, linkPatient, confirmPatientSync, setPreferences } = useStore();
   const { push } = useToast();
 
   const [showPrefs, setShowPrefs] = useState(true);
+  const [name, setName] = useState("");
   const [stage, setStage] = useState<Stage>("add");
   const [mode, setMode] = useState<"qr" | "id">("id");
   const [patientId, setPatientId] = useState("");
@@ -58,9 +49,9 @@ function CaregiverSetupPageInner() {
   if (showPrefs) {
     return (
       <PreferencesStep
-        name={name}
-        onDone={(prefs) => {
-          setPreferences(prefs);
+        onDone={({ name: n, language, prefs }) => {
+          setName(n);
+          setPreferences({ language, ...prefs });
           setShowPrefs(false);
         }}
       />

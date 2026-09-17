@@ -29,16 +29,22 @@ export default function WelcomePage() {
           </p>
 
           <Link
-            href="/onboarding/role"
+            href="/auth/phone"
             className="mt-8 flex h-14 w-full items-center justify-center rounded-2xl bg-primary text-[16px] font-semibold text-white shadow-floating active:opacity-90"
           >
             Get started
           </Link>
           <Link
-            href="/onboarding/role?mode=login"
+            href="/auth/login"
             className="mt-4 flex h-11 w-full items-center justify-center text-[14px] font-semibold text-primary active:opacity-70"
           >
             I already have an account
+          </Link>
+          <Link
+            href="/doctor/entry"
+            className="mt-2 flex h-8 w-full items-center justify-center text-[12px] font-medium text-gray-helper active:opacity-70"
+          >
+            Are you a doctor or clinician? Sign in here
           </Link>
         </div>
       </div>

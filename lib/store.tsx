@@ -97,6 +97,8 @@ export type DoctorProfile = {
 export type AppState = {
   role: Role;
   onboarded: boolean;
+  phone: string;
+  accountVerified: boolean;
   name: string;
   procedure: string;
   surgeryDate: string;
@@ -113,13 +115,15 @@ export type AppState = {
   streak: Streak;
   lastCheckIn: { mood: Mood; time: string } | null;
   askQueries: AskQuery[];
-  preferences: { largeText: boolean; voiceMode: boolean; screenReader: boolean; strongVibration: boolean };
+  preferences: { language: string; largeText: boolean; voiceMode: boolean; screenReader: boolean; strongVibration: boolean };
   caregiverLinkedPatient: { name: string; status: "pending" | "synced" } | null;
 };
 
 const DEFAULT_STATE: AppState = {
   role: null,
   onboarded: false,
+  phone: "",
+  accountVerified: false,
   name: "",
   procedure: "Knee Replacement Surgery",
   surgeryDate: "",
@@ -308,13 +312,14 @@ const DEFAULT_STATE: AppState = {
   streak: { days: 3, plant: null, plantName: "" },
   lastCheckIn: null,
   askQueries: [],
-  preferences: { largeText: false, voiceMode: false, screenReader: false, strongVibration: true },
+  preferences: { language: "English", largeText: false, voiceMode: false, screenReader: false, strongVibration: true },
   caregiverLinkedPatient: null,
 };
 
 type StoreValue = {
   state: AppState;
   setRole: (role: Role) => void;
+  verifyAccount: (phone: string) => void;
   completeOnboarding: (name: string, procedure: string, surgeryDate: string) => void;
   toggleAction: (id: string) => string | null;
   markMissed: (id: string) => string | null;
@@ -360,6 +365,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     () => ({
       state,
       setRole: (role) => setState((s) => ({ ...s, role })),
+      verifyAccount: (phone) => setState((s) => ({ ...s, phone, accountVerified: true })),
       completeOnboarding: (name, procedure, surgeryDate) =>
         setState((s) => ({
           ...s,

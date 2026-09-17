@@ -1,85 +1,42 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Icon, paths } from "@/components/icons";
 import { useStore, type Role } from "@/lib/store";
-import { useToast } from "@/lib/toast";
 
-const ROLES: { id: Exclude<Role, null>; title: string; desc: string; icon: string }[] = [
-  { id: "doctor", title: "Doctor", desc: "Verify and guide patient recovery plans", icon: paths.fileText },
+const ROLES: { id: Exclude<Role, "doctor" | null>; title: string; desc: string; icon: string }[] = [
   { id: "patient", title: "Patient", desc: "Track your own recovery journey", icon: paths.heart },
   { id: "caregiver", title: "Caregiver", desc: "Support a patient through recovery", icon: paths.users },
 ];
 
 export default function RolePage() {
-  return (
-    <Suspense fallback={null}>
-      <RolePageInner />
-    </Suspense>
-  );
-}
-
-function RolePageInner() {
   const router = useRouter();
-  const params = useSearchParams();
-  const isLogin = params.get("mode") === "login";
-  const { state, setRole, completeDoctorOnboarding } = useStore();
-  const { push } = useToast();
-  const [selected, setSelected] = useState<Exclude<Role, null> | null>(null);
+  const { setRole } = useStore();
+  const [selected, setSelected] = useState<"patient" | "caregiver" | null>(null);
 
-  function choose(id: Exclude<Role, null>) {
+  function choose(id: "patient" | "caregiver") {
     setSelected(id);
   }
 
-  function proceed(action: "signup" | "login") {
+  function proceed() {
     if (!selected) return;
     setRole(selected);
-    if (action === "login") {
-      push({
-        kind: "success",
-        title: "Welcome back!",
-        message: `Logged in as ${selected}.`,
-      });
-      if (selected === "doctor") {
-        if (!state.doctorOnboarded) {
-          completeDoctorOnboarding(
-            {
-              fullName: "Aditi Mehta",
-              regNumber: "MCI-1234567",
-              specialty: "Orthopedic Surgeon",
-              hospital: "St. Mary's Hospital",
-              language: "English",
-            },
-            "approved"
-          );
-        }
-        router.push("/doctor/dashboard");
-      } else {
-        router.push("/dashboard");
-      }
-    } else {
-      router.push(`/onboarding/signup?role=${selected}`);
-    }
+    router.push(selected === "patient" ? "/onboarding/setup" : "/onboarding/caregiver-setup");
   }
 
   return (
     <div className="flex h-full flex-col">
-      <Header title="Who's using the app?" subtitle="Choose how you'll continue" />
+      <Header title="Who's using the app?" subtitle="Choose how you'll continue" showBack={false} />
       <div className="flex-1 space-y-3 overflow-y-auto px-5 pb-6 pt-3">
         {ROLES.map((r) => {
           const active = selected === r.id;
           return (
-            <div
+            <button
               key={r.id}
-              role="button"
-              tabIndex={0}
               onClick={() => choose(r.id)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") choose(r.id);
-              }}
-              className={`w-full cursor-pointer rounded-2xl border-2 bg-white p-4 text-left shadow-card transition-colors ${
+              className={`w-full rounded-2xl border-2 bg-white p-4 text-left shadow-card transition-colors ${
                 active ? "border-primary" : "border-transparent"
               }`}
             >
@@ -91,37 +48,25 @@ function RolePageInner() {
                   <p className="text-[16px] font-bold text-ink">{r.title}</p>
                   <p className="text-[13px] leading-5 text-gray-helper">{r.desc}</p>
                 </div>
+                {active && (
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-white">
+                    <Icon path={paths.check} className="h-3.5 w-3.5" />
+                  </div>
+                )}
               </div>
-              {active && (
-                <div className="mt-3 flex gap-2 pl-0">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      proceed("signup");
-                    }}
-                    className="flex h-11 flex-1 items-center justify-center rounded-xl bg-primary text-[14px] font-semibold text-white active:opacity-90"
-                  >
-                    Sign up
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      proceed("login");
-                    }}
-                    className="flex h-11 flex-1 items-center justify-center rounded-xl bg-gray-medium text-[14px] font-semibold text-ink active:opacity-80"
-                  >
-                    Log in
-                  </button>
-                </div>
-              )}
-            </div>
+            </button>
           );
         })}
-        {isLogin && (
-          <p className="pt-2 text-center text-[12px] text-gray-helper">
-            Pick a role above, then tap "Log in" to continue with demo data.
-          </p>
-        )}
+      </div>
+
+      <div className="border-t border-gray-medium bg-white px-5 py-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+        <button
+          onClick={proceed}
+          disabled={!selected}
+          className="flex h-14 w-full items-center justify-center rounded-2xl bg-primary text-[16px] font-semibold text-white shadow-floating active:opacity-90 disabled:opacity-40"
+        >
+          Continue
+        </button>
       </div>
     </div>
   );
