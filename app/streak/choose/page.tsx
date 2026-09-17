@@ -22,7 +22,7 @@ export default function ChoosePlantPage() {
       title: "Your plant is growing!",
       message: `${name.trim() || PLANTS[selected].label} will grow as you complete your recovery plan.`,
     });
-    router.back();
+    router.replace("/streak/grow");
   }
 
   return (

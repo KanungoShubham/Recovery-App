@@ -318,6 +318,7 @@ const DEFAULT_STATE: AppState = {
 
 type StoreValue = {
   state: AppState;
+  hydrated: boolean;
   setRole: (role: Role) => void;
   verifyAccount: (phone: string) => void;
   completeOnboarding: (name: string, procedure: string, surgeryDate: string) => void;
@@ -330,6 +331,7 @@ type StoreValue = {
   setPlanStatus: (id: string, status: ApprovalStatus) => string | null;
   replyQuery: (id: string) => string | null;
   setAppointmentStatus: (id: string, status: "approved" | "rejected") => string | null;
+  requestAppointment: (time: string, reason: string) => void;
   choosePlant: (plant: NonNullable<Streak["plant"]>, plantName: string) => void;
   recordCheckIn: (mood: Mood) => void;
   submitQuery: (type: string, message: string) => void;
@@ -364,6 +366,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<StoreValue>(
     () => ({
       state,
+      hydrated,
       setRole: (role) => setState((s) => ({ ...s, role })),
       verifyAccount: (phone) => setState((s) => ({ ...s, phone, accountVerified: true })),
       completeOnboarding: (name, procedure, surgeryDate) =>
@@ -463,6 +466,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }));
         return name;
       },
+      requestAppointment: (time, reason) =>
+        setState((s) => ({
+          ...s,
+          appointments: [
+            {
+              id: `ap${Date.now()}`,
+              patientName: s.name || "Patient",
+              time,
+              kind: "requested",
+              reason,
+              status: "pending",
+            },
+            ...s.appointments,
+          ],
+        })),
       choosePlant: (plant, plantName) =>
         setState((s) => ({ ...s, streak: { ...s.streak, plant, plantName } })),
       recordCheckIn: (mood) =>
@@ -507,7 +525,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         } catch {}
       },
     }),
-    [state]
+    [state, hydrated]
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

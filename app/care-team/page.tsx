@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { BottomNav } from "@/components/BottomNav";
 import { Header } from "@/components/Header";
 import { Icon, paths } from "@/components/icons";
 import { useStore } from "@/lib/store";
@@ -29,7 +28,7 @@ export default function CareTeamPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <Header title="Care Team" subtitle="Your doctor and support circle" showBack={false} />
+      <Header title="Care Team" subtitle="Your doctor and support circle" />
 
       <div className="flex-1 overflow-y-auto px-5 pb-4 pt-2">
         <p className="mb-2 text-[13px] font-bold uppercase tracking-wide text-gray-helper">
@@ -122,7 +121,6 @@ export default function CareTeamPage() {
           ))}
         </div>
       </div>
-      <BottomNav />
     </div>
   );
 }

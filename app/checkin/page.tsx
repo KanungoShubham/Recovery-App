@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Header } from "@/components/Header";
+import { Icon, paths } from "@/components/icons";
 import { useStore, type Mood } from "@/lib/store";
 import { useToast } from "@/lib/toast";
 
@@ -61,11 +61,36 @@ export default function CheckInPage() {
     router.back();
   }
 
-  return (
-    <div className="flex h-full flex-col">
-      <Header title="AI Companion" subtitle="How are you feeling right now?" onBack={() => router.back()} />
+  function skip() {
+    router.back();
+  }
 
-      <div className="flex-1 overflow-y-auto px-5 pb-6 pt-2">
+  return (
+    <div className="flex h-full flex-col bg-primary">
+      <div className="flex items-center justify-between px-5 pt-[max(16px,env(safe-area-inset-top))]">
+        <span className="text-[12px] font-bold uppercase tracking-wide text-white/70">
+          AI Companion
+        </span>
+        <button
+          onClick={skip}
+          aria-label="Close"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white active:opacity-70"
+        >
+          <Icon path={paths.x} className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="flex flex-1 flex-col items-center justify-center px-6 pb-6 pt-2 text-center">
+        <span className="text-[56px] leading-none">{mood ? MOODS.find((m) => m.id === mood)!.emoji : "🤖"}</span>
+        <h1 className="mt-4 text-[22px] font-bold text-white">
+          {mood ? MOODS.find((m) => m.id === mood)!.label : "How are you feeling right now?"}
+        </h1>
+        {!mood && (
+          <p className="mt-1 text-[13px] text-white/70">Tap the feeling closest to how you feel today.</p>
+        )}
+      </div>
+
+      <div className="rounded-t-[28px] bg-body px-5 pb-6 pt-6">
         {!mood ? (
           <div className="grid grid-cols-2 gap-3">
             {MOODS.map((m) => (
@@ -81,11 +106,7 @@ export default function CheckInPage() {
           </div>
         ) : (
           <div className="rounded-2xl border border-gray-medium bg-white p-5 shadow-card">
-            <div className="mb-3 flex items-center gap-2">
-              <span className="text-[28px] leading-none">{MOODS.find((m) => m.id === mood)!.emoji}</span>
-              <p className="text-[15px] font-bold text-ink">{MOODS.find((m) => m.id === mood)!.label}</p>
-            </div>
-            <p className="text-[14px] leading-5 text-ink">{FOLLOWUPS[mood].prompt}</p>
+            <p className="text-[14px] font-semibold leading-5 text-ink">{FOLLOWUPS[mood].prompt}</p>
             <div className="mt-4 space-y-2">
               {FOLLOWUPS[mood].options.map((opt) => (
                 <button
@@ -105,18 +126,14 @@ export default function CheckInPage() {
             </button>
           </div>
         )}
-      </div>
 
-      {mood && (
-        <div className="border-t border-gray-medium bg-white px-5 py-4 pb-[max(16px,env(safe-area-inset-bottom))]">
-          <button
-            onClick={finish}
-            className="flex h-12 w-full items-center justify-center rounded-xl bg-gray-medium text-[13px] font-semibold text-ink active:opacity-80"
-          >
-            Skip
-          </button>
-        </div>
-      )}
+        <button
+          onClick={skip}
+          className="mt-4 flex h-11 w-full items-center justify-center text-[13px] font-semibold text-gray-helper active:opacity-70"
+        >
+          Skip
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import { BottomNav } from "@/components/BottomNav";
 import { Header } from "@/components/Header";
 import { Icon, paths } from "@/components/icons";
 import { useStore, type ReminderItem } from "@/lib/store";
@@ -34,7 +33,6 @@ export default function RemindersPage() {
       <Header
         title="Reminders"
         subtitle={`${state.reminders.filter((r) => !r.read).length} unread`}
-        showBack={false}
         right={
           <button
             onClick={markAllRead}
@@ -80,7 +78,6 @@ export default function RemindersPage() {
           })}
         </div>
       </div>
-      <BottomNav />
     </div>
   );
 }

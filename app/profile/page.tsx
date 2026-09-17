@@ -43,7 +43,7 @@ export default function ProfilePage() {
 
   const sections: {
     heading: string;
-    rows: { icon: string; label: string; sub: string; tone?: string }[];
+    rows: { icon: string; label: string; sub: string; href?: string }[];
   }[] = [
     {
       heading: "My Information",
@@ -55,15 +55,20 @@ export default function ProfilePage() {
     {
       heading: "My Care",
       rows: [
-        { icon: paths.medkit, label: "Hospital & Care Team", sub: `${state.doctor.specialty}` },
-        { icon: paths.heart, label: "Caregiver Circle", sub: state.caregivers.map((c) => c.name).join(", ") || "No caregivers yet" },
+        { icon: paths.medkit, label: "Hospital & Care Team", sub: `${state.doctor.specialty}`, href: "/care-team" },
+        {
+          icon: paths.heart,
+          label: "Caregiver Circle",
+          sub: state.caregivers.map((c) => c.name).join(", ") || "Add a caregiver",
+          href: "/care-team",
+        },
       ],
     },
     {
       heading: "My Health Information",
       rows: [
         { icon: paths.fileText, label: "Medical Documents", sub: "1 document on record" },
-        { icon: paths.clipboardList, label: "Recovery Reports", sub: `${pct}% of today's plan completed` },
+        { icon: paths.clipboardList, label: "Recovery Reports", sub: `${pct}% of today's plan completed`, href: "/plan" },
       ],
     },
     {
@@ -82,12 +87,12 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between">
             <h1 className="text-[20px] font-bold">My Profile</h1>
             <div className="flex gap-2">
-              <button
-                onClick={() => notify("Notifications")}
+              <Link
+                href="/reminders"
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 active:opacity-70"
               >
                 <Icon path={paths.bell} className="h-4 w-4" />
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -132,7 +137,7 @@ export default function ProfilePage() {
           </div>
 
           <Link
-            href="/streak/choose"
+            href={state.streak.plant ? "/streak/grow" : "/streak/choose"}
             className="mt-3 flex items-center gap-3 rounded-2xl border border-gray-medium bg-white p-4 shadow-card active:opacity-80"
           >
             <span className="text-[32px] leading-none">{plantEmoji(state.streak.plant, state.streak.days)}</span>
@@ -153,22 +158,30 @@ export default function ProfilePage() {
                 {section.heading}
               </p>
               <div className="overflow-hidden rounded-2xl border border-gray-medium bg-white shadow-card">
-                {section.rows.map((row, i) => (
-                  <button
-                    key={row.label}
-                    onClick={() => notify(row.label)}
-                    className={`flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-body ${
-                      i !== section.rows.length - 1 ? "border-b border-gray-medium" : ""
-                    }`}
-                  >
-                    <Icon path={row.icon} className="h-5 w-5 text-primary" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[14px] font-semibold text-ink">{row.label}</p>
-                      <p className="truncate text-[12px] text-gray-helper">{row.sub}</p>
-                    </div>
-                    <Icon path={paths.chevronRight} className="h-4 w-4 shrink-0 text-gray-helper" />
-                  </button>
-                ))}
+                {section.rows.map((row, i) => {
+                  const rowClass = `flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-body ${
+                    i !== section.rows.length - 1 ? "border-b border-gray-medium" : ""
+                  }`;
+                  const rowContent = (
+                    <>
+                      <Icon path={row.icon} className="h-5 w-5 text-primary" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[14px] font-semibold text-ink">{row.label}</p>
+                        <p className="truncate text-[12px] text-gray-helper">{row.sub}</p>
+                      </div>
+                      <Icon path={paths.chevronRight} className="h-4 w-4 shrink-0 text-gray-helper" />
+                    </>
+                  );
+                  return row.href ? (
+                    <Link key={row.label} href={row.href} className={rowClass}>
+                      {rowContent}
+                    </Link>
+                  ) : (
+                    <button key={row.label} onClick={() => notify(row.label)} className={rowClass}>
+                      {rowContent}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ))}

@@ -6,24 +6,38 @@ import { Header } from "@/components/Header";
 import { Icon, paths } from "@/components/icons";
 import { useStore } from "@/lib/store";
 
-type Msg = { id: string; from: "user" | "doctor"; text: string };
+type Msg = { id: string; from: "user" | "bot"; text: string };
 
-const QUERY_TYPES = [
-  "Clarify an instruction",
-  "Report a problem/side effect",
-  "Request plan change",
-  "Ask about missed action",
-  "General recovery question",
+const PROMPT_CHIPS = [
+  "I don't understand this instruction",
+  "I don't have the medicine",
+  "I'm feeling unwell",
+  "I need someone's help",
+  "Check in on how I'm feeling",
+  "Ask about a missed action",
 ];
 
-export default function AskDoctorPage() {
+const BOT_REPLIES: Record<string, string> = {
+  "I don't understand this instruction":
+    "No worries — let me explain it simply. Which part is confusing? You can also tap the task card for step-by-step details.",
+  "I don't have the medicine":
+    "I've flagged this to your caregiver and pharmacy contact. In the meantime, avoid skipping — I can help you find alternatives if needed.",
+  "I'm feeling unwell":
+    "I'm sorry to hear that. Let's do a quick check-in so I can understand how you're feeling and get you the right support.",
+  "I need someone's help":
+    "I've notified your caregiver. If this is urgent, use the SOS button so a doctor can reach you right away.",
+  "Ask about a missed action":
+    "That's okay — missing one task won't break your streak. Want me to reschedule it or mark it as skipped?",
+};
+
+export default function CompanionPage() {
   const router = useRouter();
-  const { state, submitQuery } = useStore();
+  const { state } = useStore();
   const [messages, setMessages] = useState<Msg[]>([
     {
-      id: "d0",
-      from: "doctor",
-      text: `Hi ${state.name.split(" ")[0] || "there"}, this is ${state.doctor.name}'s care team. How can we help?`,
+      id: "m0",
+      from: "bot",
+      text: `Hi ${state.name.split(" ")[0] || "there"}, I'm your recovery companion. How can I help today?`,
     },
   ]);
   const [input, setInput] = useState("");
@@ -33,27 +47,30 @@ export default function AskDoctorPage() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  function send(text: string, type = "General recovery question") {
+  function send(text: string) {
     if (!text.trim()) return;
-    setMessages((m) => [...m, { id: `u${Date.now()}`, from: "user", text }]);
+
+    if (text === "Check in on how I'm feeling") {
+      setMessages((m) => [...m, { id: `u${Date.now()}`, from: "user", text }]);
+      window.setTimeout(() => router.push("/checkin"), 400);
+      return;
+    }
+
+    const userMsg: Msg = { id: `u${Date.now()}`, from: "user", text };
+    setMessages((m) => [...m, userMsg]);
     setInput("");
-    submitQuery(type, text);
 
     window.setTimeout(() => {
-      setMessages((m) => [
-        ...m,
-        {
-          id: `d${Date.now()}`,
-          from: "doctor",
-          text: "Thanks for letting us know — status: Delivered. We'll get back to you soon.",
-        },
-      ]);
-    }, 700);
+      const reply =
+        BOT_REPLIES[text] ??
+        "Got it — I've noted that. Your care team can follow up if this needs more attention.";
+      setMessages((m) => [...m, { id: `b${Date.now()}`, from: "bot", text: reply }]);
+    }, 600);
   }
 
   return (
     <div className="flex h-full flex-col">
-      <Header title="Ask Doctor" subtitle={state.doctor.name} onBack={() => router.back()} />
+      <Header title="AI Companion" subtitle="Always here to help" onBack={() => router.back()} />
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-3">
         <div className="space-y-3">
@@ -75,13 +92,13 @@ export default function AskDoctorPage() {
 
       <div className="border-t border-gray-medium bg-white px-5 pt-3">
         <div className="no-scrollbar flex gap-2 overflow-x-auto pb-3">
-          {QUERY_TYPES.map((t) => (
+          {PROMPT_CHIPS.map((c) => (
             <button
-              key={t}
-              onClick={() => send(t, t)}
+              key={c}
+              onClick={() => send(c)}
               className="shrink-0 whitespace-nowrap rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-[12px] font-semibold text-primary active:opacity-70"
             >
-              {t}
+              {c}
             </button>
           ))}
         </div>
@@ -90,7 +107,7 @@ export default function AskDoctorPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && send(input)}
-            placeholder="Type your message..."
+            placeholder="Type a message..."
             className="h-11 flex-1 rounded-full border border-gray-medium bg-body px-4 text-[14px] text-ink outline-none focus:border-primary"
           />
           <button

@@ -1,28 +1,25 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
 import { PatientTopBar } from "@/components/PatientTopBar";
-import { ActionCard } from "@/components/ActionCard";
 import { CompanionButton } from "@/components/CompanionButton";
 import { Icon, paths } from "@/components/icons";
 import { useStore, type ActionItem } from "@/lib/store";
 import { useToast } from "@/lib/toast";
-import { plantEmoji } from "@/lib/plant";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { state, toggleAction, markMissed, addReminder } = useStore();
+  const { state, hydrated, toggleAction, markMissed, addReminder } = useStore();
   const { push } = useToast();
   const firedRef = useRef(false);
 
   useEffect(() => {
-    if (!state.onboarded && !state.role) {
+    if (hydrated && !state.onboarded && !state.role) {
       router.replace("/");
     }
-  }, [state.onboarded, state.role, router]);
+  }, [hydrated, state.onboarded, state.role, router]);
 
   useEffect(() => {
     if (firedRef.current) return;
@@ -46,10 +43,6 @@ export default function DashboardPage() {
     () => state.actions.find((a) => !a.completed),
     [state.actions]
   );
-  const rest = useMemo(
-    () => state.actions.filter((a) => a.id !== focus?.id),
-    [state.actions, focus]
-  );
 
   function handleTaken(id: string) {
     const title = toggleAction(id);
@@ -69,28 +62,6 @@ export default function DashboardPage() {
     <div className="flex h-full flex-col">
       <div className="overflow-y-auto pb-4">
         <PatientTopBar name={state.name} />
-
-        <div className="flex items-center gap-2.5 px-5 pb-4">
-          <Link
-            href="/streak/choose"
-            className="flex flex-1 items-center gap-2.5 rounded-2xl border border-gray-medium bg-white px-3.5 py-2.5 shadow-card active:opacity-80"
-          >
-            <span className="text-[22px] leading-none">{plantEmoji(state.streak.plant, state.streak.days)}</span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] font-bold text-ink">
-                {state.streak.plant ? state.streak.plantName : "Choose your plant"}
-              </p>
-              <p className="text-[11px] text-gray-helper">{state.streak.days} day streak</p>
-            </div>
-          </Link>
-          <Link
-            href="/ask-doctor"
-            className="flex h-[52px] items-center gap-1.5 rounded-2xl bg-primary/10 px-3.5 text-primary active:opacity-80"
-          >
-            <Icon path={paths.chatBubble} className="h-4 w-4" />
-            <span className="text-[12px] font-bold">Ask Doctor</span>
-          </Link>
-        </div>
 
         <div className="px-5">
           {focus ? (
@@ -112,43 +83,6 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-
-        {rest.length > 0 && (
-          <div className="px-5 pt-6">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-[16px] font-bold text-ink">Rest of today's plan</h2>
-              <span className="text-[12px] font-medium text-gray-helper">
-                {state.actions.filter((a) => a.completed).length}/{state.actions.length} done
-              </span>
-            </div>
-            <div className="space-y-3">
-              {rest.map((a) => (
-                <Link key={a.id} href={`/action/${a.id}`} className="block">
-                  <ActionCard item={a} onToggle={() => handleTaken(a.id)} />
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="px-5 pt-6">
-          <div className="rounded-2xl border border-gray-medium bg-white p-4 shadow-card">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-warning-light text-warning">
-                <Icon path={paths.calendar} className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[14px] font-semibold text-ink">Next appointment</p>
-                <p className="text-[12px] text-gray-helper">
-                  {state.doctor.name} · {state.doctor.nextVisit}
-                </p>
-              </div>
-              <Link href="/care-team" className="text-[12px] font-semibold text-primary">
-                View
-              </Link>
-            </div>
-          </div>
-        </div>
       </div>
       <CompanionButton />
       <BottomNav />
@@ -165,7 +99,7 @@ function FocusCard({
   onTaken: () => void;
   onMissed: () => void;
 }) {
-  const { push } = useToast();
+  const router = useRouter();
   const items = action.items ?? [{ id: action.id, label: action.subtitle, dose: "" }];
 
   return (
@@ -247,13 +181,7 @@ function FocusCard({
             </button>
             <div className="mt-3 flex items-center justify-center gap-4">
               <button
-                onClick={() =>
-                  push({
-                    kind: "info",
-                    title: "Need help?",
-                    message: "Connecting you with your care team.",
-                  })
-                }
+                onClick={() => router.push("/companion")}
                 className="text-center text-[13px] font-medium text-gray-helper active:opacity-70"
               >
                 Need help identifying them?
