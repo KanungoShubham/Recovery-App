@@ -17,7 +17,7 @@ export default function RolePage() {
   const router = useRouter();
   const params = useSearchParams();
   const isLogin = params.get("mode") === "login";
-  const { setRole } = useStore();
+  const { state, setRole, completeDoctorOnboarding } = useStore();
   const { push } = useToast();
   const [selected, setSelected] = useState<Exclude<Role, null> | null>(null);
 
@@ -34,7 +34,23 @@ export default function RolePage() {
         title: "Welcome back!",
         message: `Logged in as ${selected}.`,
       });
-      router.push("/dashboard");
+      if (selected === "doctor") {
+        if (!state.doctorOnboarded) {
+          completeDoctorOnboarding(
+            {
+              fullName: "Aditi Mehta",
+              regNumber: "MCI-1234567",
+              specialty: "Orthopedic Surgeon",
+              hospital: "St. Mary's Hospital",
+              language: "English",
+            },
+            "approved"
+          );
+        }
+        router.push("/doctor/dashboard");
+      } else {
+        router.push("/dashboard");
+      }
     } else {
       router.push(`/onboarding/signup?role=${selected}`);
     }

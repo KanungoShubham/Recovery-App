@@ -37,6 +37,47 @@ export type ReminderItem = {
 
 export type Caregiver = { id: string; name: string; relation: string };
 
+export type ApprovalStatus = "pending" | "approved" | "info_needed" | "rejected";
+
+export type PlanApproval = {
+  id: string;
+  patientName: string;
+  age: number;
+  condition: string;
+  submittedAgo: string;
+  documents: string[];
+  aiSummary: string;
+  status: ApprovalStatus;
+  priority: "P0" | "P1";
+};
+
+export type PatientQuery = {
+  id: string;
+  patientName: string;
+  message: string;
+  urgency: "P0" | "P1";
+  time: string;
+  replied: boolean;
+};
+
+export type DoctorAppointment = {
+  id: string;
+  patientName: string;
+  time: string;
+  kind: "requested" | "scheduled";
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+};
+
+export type DoctorProfile = {
+  fullName: string;
+  regNumber: string;
+  specialty: string;
+  hospital: string;
+  language: string;
+  verified: "pending" | "approved" | "rejected";
+};
+
 export type AppState = {
   role: Role;
   onboarded: boolean;
@@ -48,6 +89,11 @@ export type AppState = {
   reminders: ReminderItem[];
   caregivers: Caregiver[];
   doctor: { name: string; specialty: string; phone: string; nextVisit: string };
+  doctorOnboarded: boolean;
+  doctorProfile: DoctorProfile;
+  planApprovals: PlanApproval[];
+  patientQueries: PatientQuery[];
+  appointments: DoctorAppointment[];
 };
 
 const DEFAULT_STATE: AppState = {
@@ -155,6 +201,89 @@ const DEFAULT_STATE: AppState = {
     phone: "+1 (555) 019-2231",
     nextVisit: "Tomorrow, 10:00 AM",
   },
+  doctorOnboarded: false,
+  doctorProfile: {
+    fullName: "",
+    regNumber: "",
+    specialty: "",
+    hospital: "",
+    language: "English",
+    verified: "pending",
+  },
+  planApprovals: [
+    {
+      id: "pa1",
+      patientName: "Julie Fernandez",
+      age: 34,
+      condition: "Knee Replacement Surgery — Day 4 recovery plan",
+      submittedAgo: "12 min ago",
+      documents: ["discharge-summary.pdf", "prescription.pdf"],
+      aiSummary:
+        "Patient recovering well post knee replacement. AI suggests medication schedule, wound care every 12h, and gradual physiotherapy over 6 weeks.",
+      status: "pending",
+      priority: "P0",
+    },
+    {
+      id: "pa2",
+      patientName: "Marcus Chen",
+      age: 51,
+      condition: "Appendectomy — Day 1 recovery plan",
+      submittedAgo: "1 hr ago",
+      documents: ["op-notes.pdf"],
+      aiSummary:
+        "Standard post-appendectomy plan generated. Pain management and incision care included. No conflicts detected in source documents.",
+      status: "pending",
+      priority: "P1",
+    },
+    {
+      id: "pa3",
+      patientName: "Ananya Rao",
+      age: 28,
+      condition: "Fracture (wrist) — Day 2 recovery plan",
+      submittedAgo: "yesterday",
+      documents: ["x-ray-report.pdf", "discharge-note.pdf"],
+      aiSummary:
+        "Cast care and pain schedule generated. Missing follow-up date for cast removal — needs clinician input.",
+      status: "info_needed",
+      priority: "P1",
+    },
+  ],
+  patientQueries: [
+    {
+      id: "q1",
+      patientName: "Julie Fernandez",
+      message: "Is it normal to feel mild swelling around the knee after physiotherapy?",
+      urgency: "P1",
+      time: "8 min ago",
+      replied: false,
+    },
+    {
+      id: "q2",
+      patientName: "Marcus Chen",
+      message: "Sharp pain near the incision site, worse than yesterday. Should I be worried?",
+      urgency: "P0",
+      time: "25 min ago",
+      replied: false,
+    },
+  ],
+  appointments: [
+    {
+      id: "ap1",
+      patientName: "Julie Fernandez",
+      time: "Tomorrow, 10:00 AM",
+      kind: "scheduled",
+      reason: "Follow-up check-in",
+      status: "approved",
+    },
+    {
+      id: "ap2",
+      patientName: "Ananya Rao",
+      time: "Today, 4:30 PM",
+      kind: "requested",
+      reason: "Cast removal consultation requested by patient",
+      status: "pending",
+    },
+  ],
 };
 
 type StoreValue = {
@@ -166,6 +295,10 @@ type StoreValue = {
   markAllRead: () => void;
   addReminder: (r: Omit<ReminderItem, "id" | "read" | "time">) => void;
   inviteCaregiver: (name: string, relation: string) => void;
+  completeDoctorOnboarding: (profile: Omit<DoctorProfile, "verified">, verified?: DoctorProfile["verified"]) => void;
+  setPlanStatus: (id: string, status: ApprovalStatus) => string | null;
+  replyQuery: (id: string) => string | null;
+  setAppointmentStatus: (id: string, status: "approved" | "rejected") => string | null;
   reset: () => void;
 };
 
@@ -179,7 +312,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) setState(JSON.parse(raw));
+      if (raw) setState((s) => ({ ...s, ...JSON.parse(raw) }));
     } catch {}
     setHydrated(true);
   }, []);
@@ -250,6 +383,48 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           ...s,
           caregivers: [...s.caregivers, { id: `c${Date.now()}`, name, relation }],
         })),
+      completeDoctorOnboarding: (profile, verified = "pending") =>
+        setState((s) => ({
+          ...s,
+          doctorOnboarded: true,
+          doctorProfile: { ...profile, verified },
+        })),
+      setPlanStatus: (id, status) => {
+        let name: string | null = null;
+        setState((s) => ({
+          ...s,
+          planApprovals: s.planApprovals.map((p) => {
+            if (p.id !== id) return p;
+            name = p.patientName;
+            return { ...p, status };
+          }),
+        }));
+        return name;
+      },
+      replyQuery: (id) => {
+        let name: string | null = null;
+        setState((s) => ({
+          ...s,
+          patientQueries: s.patientQueries.map((q) => {
+            if (q.id !== id) return q;
+            name = q.patientName;
+            return { ...q, replied: true };
+          }),
+        }));
+        return name;
+      },
+      setAppointmentStatus: (id, status) => {
+        let name: string | null = null;
+        setState((s) => ({
+          ...s,
+          appointments: s.appointments.map((a) => {
+            if (a.id !== id) return a;
+            name = a.patientName;
+            return { ...a, status };
+          }),
+        }));
+        return name;
+      },
       reset: () => {
         setState(DEFAULT_STATE);
         try {

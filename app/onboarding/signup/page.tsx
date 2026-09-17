@@ -39,6 +39,8 @@ export default function SignupPage() {
       });
       if (role === "patient") {
         router.push(`/onboarding/setup?name=${encodeURIComponent(name)}`);
+      } else if (role === "doctor") {
+        router.push("/doctor/onboarding");
       } else {
         router.push("/dashboard");
       }
